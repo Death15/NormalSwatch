@@ -8,9 +8,8 @@ local function run(msg)
     local data = load_data(_config.moderation.data)
     if not data[tostring(msg.to.id)] then
       return "User Who Invited Me has been blocked"
-      chat_del_user('chat#id'..msg.to.id, 'user#id'..167946378, callback, false)
-      block_user("user#id"..msg.from.id,ok_cb,false)
-  end
+      chat_del_user('chat#id'..msg.to.id, 'user#id'..14966147, callback, false)
+      end
 end
 
 return {
