@@ -209,28 +209,27 @@ function create_config( )
   config = {
     enabled_plugins = {
     "onservice",
-    "inrealm",
-    "ingroup",
-    "inpm",
-    "banhammer",
+    "Auto-Report",
+    "Auto_Leave",
+    "Member-Manager",
+    "S2A",
     "stats",
     "anti_spam",
     "owners",
     "arabic_lock",
     "set",
     "get",
-    "broadcast",
+    "plugins",
     "download_media",
     "invite",
     "all",
     "leave_ban",
-    "admin"
+    "Swatch-Manager"
     },
     sudo_users = {109722284},--Sudo users
     disabled_channels = {},
     moderation = {data = 'data/moderation.json'},
-    about_text = [[
-    #TauchTG v 2.3 Open Source
+    about_text = [[ #TauchTG v 2.3 Open Source
 
 #An Advance Administration Bot based on SEEDTEAM/TeleSeed
 #using TG
