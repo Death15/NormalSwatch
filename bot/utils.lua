@@ -531,14 +531,14 @@ end
 
 
 
---Check if this chat is realm or not
-function is_realm(msg)
+--Check if this chat is vip or not
+function is_vip(msg)
   local var = false
-  local realms = 'realms'
+  local vips = 'vips'
   local data = load_data(_config.moderation.data)
   local chat = msg.to.id
-  if data[tostring(realms)] then
-    if data[tostring(realms)][tostring(msg.to.id)] then
+  if data[tostring(vips)] then
+    if data[tostring(vips)][tostring(msg.to.id)] then
        var = true
        end
        return var
@@ -584,15 +584,15 @@ function user_print_name(user)
    return text
 end
 
---Check if user is the owner of that group or not
-function is_owner(msg)
+--Check if user is the leader of that group or not
+function is_leader(msg)
   local var = false
   local data = load_data(_config.moderation.data)
   local user = msg.from.id
   
   if data[tostring(msg.to.id)] then
-    if data[tostring(msg.to.id)]['set_owner'] then
-      if data[tostring(msg.to.id)]['set_owner'] == tostring(user) then
+    if data[tostring(msg.to.id)]['set_leader'] then
+      if data[tostring(msg.to.id)]['set_leader'] == tostring(user) then
         var = true
       end
     end
@@ -611,13 +611,13 @@ function is_owner(msg)
   return var
 end
 
-function is_owner2(user_id, group_id)
+function is_leader2(user_id, group_id)
   local var = false
   local data = load_data(_config.moderation.data)
 
   if data[tostring(group_id)] then
-    if data[tostring(group_id)]['set_owner'] then
-      if data[tostring(group_id)]['set_owner'] == tostring(user_id) then
+    if data[tostring(group_id)]['set_leader'] then
+      if data[tostring(group_id)]['set_leader'] == tostring(user_id) then
         var = true
       end
     end
@@ -689,8 +689,8 @@ function is_momod(msg)
   end
 
   if data[tostring(msg.to.id)] then
-    if data[tostring(msg.to.id)]['set_owner'] then
-      if data[tostring(msg.to.id)]['set_owner'] == tostring(user) then
+    if data[tostring(msg.to.id)]['set_leader'] then
+      if data[tostring(msg.to.id)]['set_leader'] == tostring(user) then
         var = true
       end
     end
@@ -722,8 +722,8 @@ function is_momod2(user_id, group_id)
   end
 
   if data[tostring(group_id)] then
-    if data[tostring(group_id)]['set_owner'] then
-      if data[tostring(group_id)]['set_owner'] == tostring(user_id) then
+    if data[tostring(group_id)]['set_leader'] then
+      if data[tostring(group_id)]['set_leader'] == tostring(user_id) then
         var = true
       end
     end
@@ -747,7 +747,7 @@ function kick_user(user_id, chat_id)
   if tonumber(user_id) == tonumber(our_id) then -- Ignore bot
     return
   end
-  if is_owner2(user_id, chat_id) then -- Ignore admins
+  if is_leader2(user_id, chat_id) then -- Ignore admins
     return
   end
   local chat = 'chat#id'..chat_id
@@ -808,7 +808,7 @@ end
 function ban_list(chat_id)
   local hash =  'banned:'..chat_id
   local list = redis:smembers(hash)
-  local text = "Ban list !\n\n"
+  local text = "Banned users !\n\n"
   for k,v in pairs(list) do
  		local user_info = redis:hgetall('user:'..v)
 		if user_info and user_info.print_name then
@@ -824,7 +824,7 @@ end
 function banall_list() 
   local hash =  'gbanned'
   local list = redis:smembers(hash)
-  local text = "global bans !\n\n"
+  local text = "global banned users !\n\n"
   for k,v in pairs(list) do
 		 		local user_info = redis:hgetall('user:'..v)
 		if user_info and user_info.print_name then
@@ -853,8 +853,8 @@ function Kick_by_reply(extra, success, result)
     if tonumber(result.from.id) == tonumber(our_id) then -- Ignore bot
       return "I won't kick myself"
     end
-    if is_momod2(result.from.id, result.to.id) then -- Ignore mods,owner,admin
-      return "you can't kick mods,owner and admins"
+    if is_momod2(result.from.id, result.to.id) then -- Ignore mods,leader,admin
+      return "you can't kick mods,leader and admins"
     end
     chat_del_user(chat, 'user#id'..result.from.id, ok_cb, false)
   else
@@ -885,8 +885,8 @@ function ban_by_reply(extra, success, result)
   if tonumber(result.from.id) == tonumber(our_id) then -- Ignore bot
       return "I won't ban myself"
   end
-  if is_momod2(result.from.id, result.to.id) then -- Ignore mods,owner,admin
-    return "you can't kick mods,owner and admins"
+  if is_momod2(result.from.id, result.to.id) then -- Ignore mods,leader,admin
+    return "you can't kick mods,leader and admins"
   end
   ban_user(result.from.id, result.to.id)
   send_large_msg(chat, "User "..result.from.id.." Banned")
