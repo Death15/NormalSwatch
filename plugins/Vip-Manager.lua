@@ -4,19 +4,19 @@ do
 
 local function create_group(msg)
         -- superuser and admins only (because sudo are always has privilege)
-        if is_sudo(msg) or is_realm(msg) and is_admin(msg) then
+        if is_sudo(msg) or is_vip(msg) and is_admin(msg) then
                 local group_creator = msg.from.print_name
                 create_group_chat (group_creator, group_name, ok_cb, false)
-                return 'Group [ '..string.gsub(group_name, '_', ' ')..' ] has been created.'
+                return 'Group  '..string.gsub(group_name, '_', ' ')..'  has been created.'
         end
 end
 
-local function create_realm(msg)
+local function create_vip(msg)
         -- superuser and admins only (because sudo are always has privilege)
-        if is_sudo(msg) or is_realm(msg) and is_admin(msg) then
+        if is_sudo(msg) or is_vip(msg) and is_admin(msg) then
                 local group_creator = msg.from.print_name
                 create_group_chat (group_creator, group_name, ok_cb, false)
-                return 'Realm [ '..string.gsub(group_name, '_', ' ')..' ] has been created.'
+                return 'Vip '..string.gsub(group_name, '_', ' ')..' has been created.'
         end
 end
 
@@ -30,7 +30,7 @@ local function killchat(cb_extra, success, result)
   end
 end
 
-local function killrealm(cb_extra, success, result)
+local function killvip(cb_extra, success, result)
   local receiver = cb_extra.receiver
   local chat_id = "chat#id"..result.id
   local chatname = result.print_name
@@ -203,7 +203,7 @@ local function show_group_settings(msg, data, target)
         return "For admins only!"
     end
     local settings = data[tostring(target)]['settings']
-    local text = "Group settings:\nLock group name : "..settings.lock_name.."\nLock group photo : "..settings.lock_photo.."\nLock group member : "..settings.lock_member
+    local text = "Normal Group settings:\nGroup name : "..settings.lock_name.."\nGroup photo : "..settings.lock_photo.."\nGroup member : "..settings.lock_member
     return text
 end
 
@@ -286,9 +286,9 @@ local function admin_list(msg)
         data[tostring(admins)] = {}
         save_data(_config.moderation.data, data)
         end
-        local message = 'List for Realm admins:\n'
+        local message = 'List for SwatchTG VIP admins:\n'
         for k,v in pairs(data[tostring(admins)]) do
-                message = message .. '- (at)' .. v .. ' [' .. k .. '] ' ..'\n'
+                message = message .. '- 📉 ' .. v .. ' [' .. k .. '] ' ..'\n'
         end
         return message
 end
@@ -299,7 +299,7 @@ local function groups_list(msg)
         if not data[tostring(groups)] then
                 return 'No groups at the moment'
         end
-        local message = 'List of groups:\n'
+        local message = 'List of Swatch TG Groups:\n'
         for k,v in pairs(data[tostring(groups)]) do
                 local settings = data[tostring(v)]['settings']
                 for m,n in pairs(settings) do
@@ -327,31 +327,31 @@ local function groups_list(msg)
         return message
        
 end
-local function realms_list(msg)
+local function vips_list(msg)
     local data = load_data(_config.moderation.data)
-        local realms = 'realms'
+        local vips = 'vips'
         if not data[tostring(realms)] then
-                return 'No Realms at the moment'
+                return 'No VIPS at the moment'
         end
-        local message = 'List of Realms:\n'
-        for k,v in pairs(data[tostring(realms)]) do
+        local message = 'List of Vips:\n'
+        for k,v in pairs(data[tostring(vips)]) do
                 local settings = data[tostring(v)]['settings']
                 for m,n in pairs(settings) do
                         if m == 'set_name' then
                                 name = n
                         end
                 end
-                local group_owner = "No owner"
+                local group_owner = "No leader"
                 if data[tostring(v)]['admins_in'] then
-                        group_owner = tostring(data[tostring(v)]['admins_in'])
+                        group_leader = tostring(data[tostring(v)]['admins_in'])
 		end
                 local group_link = "No link"
                 if data[tostring(v)]['settings']['set_link'] then
 			group_link = data[tostring(v)]['settings']['set_link']
 		end
-                message = message .. '- '.. name .. ' (' .. v .. ') ['..group_owner..'] \n {'..group_link.."}\n"
+                message = message .. '- '.. name .. ' (' .. v .. ') ['..group_leader..'] \n {'..group_link.."}\n"
         end
-        local file = io.open("./groups/lists/realms.txt", "w")
+        local file = io.open("./groups/lists/vips.txt", "w")
         file:write(message)
         file:flush()
         file:close()
@@ -396,9 +396,9 @@ local function username_id(cb_extra, success, result)
       if vusername == member then
         member_username = member
         member_id = v.id
-        if mod_cmd == 'addadmin' then
+        if mod_cmd == 'adminprom' then
             return admin_user_promote(receiver, member_username, member_id)
-        elseif mod_cmd == 'removeadmin' then
+        elseif mod_cmd == 'admindem' then
             return admin_user_demote(receiver, member_username, member_id)
         end
       end
@@ -442,8 +442,8 @@ end
 function run(msg, matches)
     --vardump(msg)
    	local name_log = user_print_name(msg.from)
-       if matches[1] == 'log' and is_owner(msg) then
-		savelog(msg.to.id, "log file created by owner")
+       if matches[1] == 'log' and is_leader(msg) then
+		savelog(msg.to.id, "log file created by leader")
 		send_document("chat#id"..msg.to.id,"./groups/"..msg.to.id.."log.txt", ok_cb, false)
         end
 
@@ -466,14 +466,14 @@ function run(msg, matches)
         return create_group(msg)
     end
     
-    if not is_sudo(msg) or not is_admin(msg) and not is_realm(msg) then
+    if not is_sudo(msg) or not is_admin(msg) and not is_vip(msg) then
 		return  --Do nothing
 	end
 
-    if matches[1] == 'createrealm' and matches[2] then
+    if matches[1] == 'createvip' and matches[2] then
         group_name = matches[2]
-        group_type = 'realm'
-        return create_realm(msg)
+        group_type = 'vip'
+        return create_vip(msg)
     end
 
     local data = load_data(_config.moderation.data)
@@ -490,7 +490,7 @@ function run(msg, matches)
 			local target = matches[2]
 		    return set_rules(msg, data, target)
 		end
-		if matches[1] == 'lock' then --group lock *
+		if matches[1] == 'gp' and matches[2] '+' then --group lock *
 			local target = matches[2]
 		    if matches[3] == 'name' then
 		        return lock_group_name(msg, data, target)
@@ -505,7 +505,7 @@ function run(msg, matches)
 		        return lock_group_flood(msg, data, target)
 		    end
 		end
-		if matches[1] == 'unlock' then --group unlock *
+		if matches[1] == 'gp' and matches[2] '-' then --group unlock *
 			local target = matches[2]
 		    if matches[3] == 'name' then
 		        return unlock_group_name(msg, data, target)
@@ -520,8 +520,8 @@ function run(msg, matches)
 		        return unlock_group_flood(msg, data, target)
 		    end
 		end
-		if matches[1] == 'settings' and data[tostring(matches[2])]['settings'] then
-			local target = matches[2]
+		if matches[1] == 'gp' and matches[2] '?' and data[tostring(matches[2])]['settings'] then
+			local target = matches[3]
 		    return show_group_settings(msg, data, target)
 		end
 
@@ -532,7 +532,7 @@ function run(msg, matches)
                     local group_name_set = data[tostring(msg.to.id)]['settings']['set_name']
                     local to_rename = 'chat#id'..msg.to.id
                     rename_chat(to_rename, group_name_set, ok_cb, false)
-                    savelog(msg.to.id, "Realm { "..msg.to.print_name.." }  name changed to [ "..new_name.." ] by "..name_log.." ["..msg.from.id.."]")
+                    savelog(msg.to.id, "Vip { "..msg.to.print_name.." }  name changed to [ "..new_name.." ] by "..name_log.." ["..msg.from.id.."]")
                 end
 		if matches[1] == 'setgpname' and is_admin(msg) then
 		    local new_name = string.gsub(matches[3], '_', ' ')
@@ -560,7 +560,7 @@ function run(msg, matches)
                   if not is_admin(msg) then
                      return nil
                   end
-                  if is_realm(msg) then
+                  if is_vip(msg) then
                      local receiver = 'chat#id'..matches[3]
                      return modrem(msg),
                      print("Closing Group: "..receiver),
@@ -573,13 +573,13 @@ function run(msg, matches)
                   if not is_admin(msg) then
                      return nil
                   end
-                  if is_realm(msg) then
+                  if is_vip(msg) then
                      local receiver = 'chat#id'..matches[3]
-                     return realmrem(msg),
-                     print("Closing realm: "..receiver),
+                     return viprem(msg),
+                     print("Closing Vip: "..receiver),
                      chat_info(receiver, killrealm, {receiver=receiver})
                   else
-                     return 'Error: Realm '..matches[3]..' not found' 
+                     return 'Error: Vip '..matches[3]..' not found' 
                     end
                  end
 		if matches[1] == 'chat_add_user' then
@@ -592,25 +592,25 @@ function run(msg, matches)
 				chat_del_user(chat, user, ok_cb, true)
 			end
 		end
-		if matches[1] == 'addadmin' then
+		if matches[1] == 'adminprom' then
 			if string.match(matches[2], '^%d+$') then
 				local admin_id = matches[2]
 				print("user "..admin_id.." has been promoted as admin")
 				return admin_promote(msg, admin_id)
 			else
 			local member = string.gsub(matches[2], "@", "")
-				local mod_cmd = "addadmin"
+				local mod_cmd = "adminprom"
 				chat_info(receiver, username_id, {mod_cmd= mod_cmd, receiver=receiver, member=member})
 			end
 		end
-		if matches[1] == 'removeadmin' then
+		if matches[1] == 'admindem' then
 			if string.match(matches[2], '^%d+$') then
 				local admin_id = matches[2]
-				print("user "..admin_id.." has been demoted")
+				print("Admin "..admin_id.." has been demoted")
 				return admin_demote(msg, admin_id)
 			else
 			local member = string.gsub(matches[2], "@", "")
-				local mod_cmd = "removeadmin"
+				local mod_cmd = "admindem"
 				chat_info(receiver, username_id, {mod_cmd= mod_cmd, receiver=receiver, member=member})
 			end
 		end
@@ -618,7 +618,7 @@ function run(msg, matches)
                         local group_type = get_group_type(msg)
 			return group_type
 		end
-		if matches[1] == 'list' and matches[2] == 'admins' then
+		if matches[1] == 'adminlist' then
 			return admin_list(msg)
 		end
 		if matches[1] == 'list' and matches[2] == 'groups' then
@@ -632,11 +632,11 @@ function run(msg, matches)
 			return "Group list created" --group_list(msg)
                   end
 		end
-		if matches[1] == 'list' and matches[2] == 'realms' then
+		if matches[1] == 'list' and matches[2] == 'vips' then
                   if msg.to.type == 'chat' then
-			realms_list(msg)
-		        send_document("chat#id"..msg.to.id, "./groups/lists/realms.txt", ok_cb, false)	
-			return "Realms list created" --realms_list(msg)
+			vips_list(msg)
+		        send_document("chat#id"..msg.to.id, "./groups/lists/vip.txt", ok_cb, false)	
+			return "Vip list created" --realms_list(msg)
                    elseif msg.to.type == 'user' then 
                         realms_list(msg)
 		        send_document("user#id"..msg.from.id, "./groups/lists/realms.txt", ok_cb, false)	
@@ -659,22 +659,23 @@ end
 return {
   patterns = {
     "^[!/](creategroup) (.*)$",
-    "^[!/](createrealm) (.*)$",
+    "^[!/](createvip) (.*)$",
     "^[!/](setabout) (%d+) (.*)$",
     "^[!/](setrules) (%d+) (.*)$",
     "^[!/](setname) (.*)$",
     "^[!/](setgpname) (%d+) (.*)$",
     "^[!/](setname) (%d+) (.*)$",
-        "^[!/](lock) (%d+) (.*)$",
-    "^[!/](unlock) (%d+) (.*)$",
-    "^[!/](setting) (%d+)$",
+    "^[!/](gp) (+) (%d+) (.*)$",
+    "^[!/](gp) (-) (%d+) (.*)$",
+    "^[!/](gp) (?) (%d+)$",
         "^[!/](wholist)$",
         "^[!/](who)$",
         "^[!/](type)$",
     "^[!/](kill) (chat) (%d+)$",
-    "^[!/](kill) (realm) (%d+)$",
-    "^[!/](addadmin) (.*)$", -- sudoers only
-    "^[!/](removeadmin) (.*)$", -- sudoers only
+    "^[!/](kill) (vip) (%d+)$",
+    "^[!/](adminprom) (.*)$", -- sudoers only
+    "^[!/](admindem) (.*)$", -- sudoers only
+    "^[!/](adminlist)$",
     "^[!/](list) (.*)$",
         "^[!/](log)$",
         "^[!/](help)$",
