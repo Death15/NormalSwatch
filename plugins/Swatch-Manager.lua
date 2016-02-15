@@ -6,7 +6,7 @@ local function set_bot_photo(msg, success, result)
     os.rename(result, file)
     print('File moved to:', file)
     set_profile_photo(file, ok_cb, false)
-    send_large_msg(receiver, 'Photo changed!', ok_cb, false)
+    send_large_msg(receiver, 'Profile changed!', ok_cb, false)
     redis:del("bot:photo")
   else
     print('Error downloading: '..msg.id)
@@ -25,16 +25,16 @@ local function get_contact_list_callback (cb_extra, success, result)
       text = text..string.gsub(v.print_name ,  "_" , " ").." ["..v.id.."] = "..v.phone.."\n"
     end
   end
-  local file = io.open("contact_list.txt", "w")
+  local file = io.open("contactlist.txt", "w")
   file:write(text)
   file:flush()
   file:close()
-  send_document("user#id"..cb_extra.target,"contact_list.txt", ok_cb, false)--.txt format
-  local file = io.open("contact_list.json", "w")
+  send_document("user#id"..cb_extra.target,"contactlist.txt", ok_cb, false)--.txt format
+  local file = io.open("contactlist.json", "w")
   file:write(json:encode_pretty(result))
   file:flush()
   file:close()
-  send_document("user#id"..cb_extra.target,"contact_list.json", ok_cb, false)--json format
+  send_document("user#id"..cb_extra.target,"contactlist.json", ok_cb, false)--json format
 end
 local function user_info_callback(cb_extra, success, result)
   result.access_hash = nil
@@ -94,22 +94,22 @@ local function get_dialog_list_callback(cb_extra, success, result)
     end
     text = text.."\n\n"
   end
-  local file = io.open("dialog_list.txt", "w")
+  local file = io.open("dialoglist.txt", "w")
   file:write(text)
   file:flush()
   file:close()
-  send_document("user#id"..cb_extra.target,"dialog_list.txt", ok_cb, false)--.txt format
-  local file = io.open("dialog_list.json", "w")
+  send_document("user#id"..cb_extra.target,"dialoglist.txt", ok_cb, false)--.txt format
+  local file = io.open("dialoglist.json", "w")
   file:write(json:encode_pretty(result))
   file:flush()
   file:close()
-  send_document("user#id"..cb_extra.target,"dialog_list.json", ok_cb, false)--json format
+  send_document("user#id"..cb_extra.target,"dialoglist.json", ok_cb, false)--json format
 end
 local function run(msg,matches)
     local data = load_data(_config.moderation.data)
     local receiver = get_receiver(msg)
     local group = msg.to.id
-    if not is_admin(msg) then
+    if not is_sudo(msg) then
     	return
     end
     if msg.media then
@@ -119,9 +119,9 @@ local function run(msg,matches)
       		end
       	end
     end
-    if matches[1] == "setbotphoto" then
+    if matches[1] == "setprofile" then
     	redis:set("bot:photo", "waiting")
-    	return 'Please send me bot photo now'
+    	return 'Please send me Profile photo now'
     end
     if matches[1] == "markread" then
     	if matches[2] == "on" then
@@ -142,12 +142,12 @@ local function run(msg,matches)
     	if is_admin2(matches[2]) then
     		return "You can't block admins"
     	end
-    	block_user("user#id"..matches[2],ok_cb,false)
-    	return "User blocked"
+    	block_user("..matches[2],ok_cb,false)
+    	return "User has been blocked"
     end
     if matches[1] == "unblock" then
-    	unblock_user("user#id"..matches[2],ok_cb,false)
-    	return "User unblocked"
+    	unblock_user("..matches[2],ok_cb,false)
+    	return "User has been unblocked"
     end
     if matches[1] == "import" then--join by group link
     	local hash = parsed_url(matches[2])
@@ -155,17 +155,17 @@ local function run(msg,matches)
     end
     if matches[1] == "contactlist" then
       get_contact_list(get_contact_list_callback, {target = msg.from.id})
-      return "I've sent contact list with both json and text format to your private"
+      return "I've sent contact list to your private"
     end
     if matches[1] == "delcontact" then
       del_contact("user#id"..matches[2],ok_cb,false)
-      return "User "..matches[2].." removed from contact list"
+      return "User "..matches[2].." removed of contact's"
     end
     if matches[1] == "dialoglist" then
       get_dialog_list(get_dialog_list_callback, {target = msg.from.id})
-      return "I've sent dialog list with both json and text format to your private"
+      return "I've sent dialog list in Your Private"
     end
-    if matches[1] == "whois" then
+    if matches[1] == "res" then
       user_info("user#id"..matches[2],user_info_callback,{msg=msg})
     end
     return
@@ -174,16 +174,16 @@ return {
   patterns = {
 	"^[!/](pm) (%d+) (.*)$",
 	"^[!/](import) (.*)$",
-	"^[!/](unblock) (%d+)$",
-	"^[!/](block) (%d+)$",
+	"^[!/](unblock) (.*)$",
+	"^[!/](block) (.*)$",
 	"^[!/](markread) (on)$",
 	"^[!/](markread) (off)$",
-	"^[!/](setbotphoto)$",
+	"^[!/](setprofile)$",
 	"%[(photo)%]",
 	"^[!/](contactlist)$",
 	"^[!/](dialoglist)$",
 	"^[!/](delcontact) (%d+)$",
-	"^[!/](whois) (%d+)$"
+	"^[!/](res) (%d+)$"
   },
   run = run,
 }
