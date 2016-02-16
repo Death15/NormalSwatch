@@ -14,11 +14,12 @@ end
 local hash_en = 'english:enabled:'..msg.to.id
 local enenabled = redis:get(hash_en)
 if matches[2] == "en" then
+  redis:set(hash_en, true)
   return "Group Language Has been set to : <English>"
-redis:set(hash_en, true)
+
 end
 
-if not hash_per then
+if not perenabled then
   redis:get(hash_en, true)
 end 
 end
