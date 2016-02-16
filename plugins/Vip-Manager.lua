@@ -288,7 +288,7 @@ local function admin_list(msg)
         end
         local message = 'List for SwatchTG VIP admins:\n'
         for k,v in pairs(data[tostring(admins)]) do
-                message = message .. '- 📉 ' .. v .. ' [' .. k .. '] ' ..'\n'
+                message = message .. '> 📉 ' .. v .. ' [' .. k .. '] ' ..'\n'
         end
         return message
 end
@@ -307,16 +307,16 @@ local function groups_list(msg)
                                 name = n
                         end
                 end
-                local group_owner = "No owner"
-                if data[tostring(v)]['set_owner'] then
-                        group_owner = tostring(data[tostring(v)]['set_owner'])
+                local group_owner = "No LEADER"
+                if data[tostring(v)]['set_leader'] then
+                        group_leader = tostring(data[tostring(v)]['set_leader'])
                 end
                 local group_link = "No link"
                 if data[tostring(v)]['settings']['set_link'] then
 			group_link = data[tostring(v)]['settings']['set_link']
 		end
 
-                message = message .. '- '.. name .. ' (' .. v .. ') ['..group_owner..'] \n {'..group_link.."}\n"
+                message = message .. '- '.. name .. ' (' .. v .. ') ['..group_leader..'] \n {'..group_link.."}\n"
              
                
         end
@@ -330,7 +330,7 @@ end
 local function vips_list(msg)
     local data = load_data(_config.moderation.data)
         local vips = 'vips'
-        if not data[tostring(realms)] then
+        if not data[tostring(vips)] then
                 return 'No VIPS at the moment'
         end
         local message = 'List of Vips:\n'
@@ -341,7 +341,7 @@ local function vips_list(msg)
                                 name = n
                         end
                 end
-                local group_owner = "No leader"
+                local group_leader = "No leader"
                 if data[tostring(v)]['admins_in'] then
                         group_leader = tostring(data[tostring(v)]['admins_in'])
 		end
